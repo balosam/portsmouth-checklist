@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sam's Portsmouth Travel Checklist</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --card: #1f2235;
+    --border: #2a2d45;
+    --accent: #4f8ef7;
+    --accent-green: #34d399;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --danger: #f87171;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 99px;
+    height: 10px;
+    margin: 16px auto;
+    max-width: 600px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-green));
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .progress-label span {
+    color: var(--accent-green);
+    font-weight: 600;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-ghost { background: var(--border); color: var(--text); }
+
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    cursor: pointer;
+    background: var(--surface);
+    user-select: none;
+    gap: 10px;
+  }
+
+  .section-header:hover { background: var(--border); }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-emoji { font-size: 1.2rem; }
+
+  .section-count {
+    font-size: 0.78rem;
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 99px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .section-count.done { color: var(--accent-green); }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+  }
+
+  .section.collapsed .chevron { transform: rotate(-90deg); }
+
+  .section-body {
+    padding: 10px 18px 14px;
+  }
+
+  .section.collapsed .section-body { display: none; }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    group: true;
+  }
+
+  .item:last-of-type { border-bottom: none; }
+
+  .item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    accent-color: var(--accent-green);
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .item-label {
+    flex: 1;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .item-label.checked {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .item-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .item-delete {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 1rem;
+    opacity: 0;
+    padding: 0 4px;
+    transition: opacity 0.2s;
+  }
+
+  .item:hover .item-delete { opacity: 1; }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .add-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    outline: none;
+  }
+
+  .add-input:focus { border-color: var(--accent); }
+  .add-input::placeholder { color: var(--muted); }
+
+  .add-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+
+  .add-btn:hover { opacity: 0.85; }
+
+  .saved-badge {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--accent-green);
+    color: #0f1117;
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+
+  .saved-badge.show { opacity: 1; }
+
+  @media (max-width: 500px) {
+    .header h1 { font-size: 1.4rem; }
+    .controls { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>✈️ Sam's Portsmouth Travel Checklist</h1>
+  <p>January 2027 — University of Portsmouth</p>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar" id="progressBar" style="width:0%"></div>
+</div>
+<div class="progress-label" id="progressLabel">Loading...</div>
+
+<div class="controls">
+  <button class="btn btn-ghost" onclick="expandAll()">Expand All</button>
+  <button class="btn btn-ghost" onclick="collapseAll()">Collapse All</button>
+  <button class="btn btn-ghost" onclick="uncheckAll()">Reset All</button>
+  <button class="btn btn-danger" onclick="clearCustomItems()">Clear My Added Items</button>
+</div>
+
+<div id="sectionsContainer"></div>
+
+<div class="saved-badge" id="savedBadge">✓ Progress saved</div>
+
+<script>
+const STORAGE_KEY = 'sam_portsmouth_checklist_v1';
+
+const defaultSections = [
+  {
+    id: 'documents',
+    emoji: '📄',
+    title: 'Documents (Hand Luggage — Never Check In)',
+    items: [
+      { id: 'd1', text: 'International passport with UK visa', note: 'Keep on your person at all times' },
+      { id: 'd2', text: 'University of Portsmouth unconditional offer letter', note: 'Print a copy' },
+      { id: 'd3', text: 'CAS letter from Portsmouth', note: 'Required at UK border' },
+      { id: 'd4', text: 'WAEC certificate (original)', note: '' },
+      { id: 'd5', text: 'Aptech degree certificate (original)', note: '' },
+      { id: 'd6', text: 'Aptech transcripts', note: '' },
+      { id: 'd7', text: 'Academic reference letter', note: '' },
+      { id: 'd8', text: 'English proficiency letter', note: '' },
+      { id: 'd9', text: 'GTBank bank statements (printed and stamped)', note: '28-day POF statements' },
+      { id: 'd10', text: 'GTBank account details (written physically)', note: 'Naira 3005836224 / GBP 3005836248' },
+      { id: 'd11', text: 'Accommodation booking confirmation', note: 'Collegiate Crown Place, Station Street' },
+      { id: 'd12', text: 'NHS surcharge (IHS) payment receipt', note: '' },
+      { id: 'd13', text: 'Visa application reference number (written)', note: '' },
+      { id: 'd14', text: 'Emergency contacts card (written, not just on phone)', note: 'Dad, mum, Kelechi, Mrs Chinelo' },
+      { id: 'd15', text: '10 passport photographs', note: 'For various registrations on arrival' },
+      { id: 'd16', text: 'NIN card', note: '' },
+      { id: 'd17', text: 'Birth certificate (original)', note: '' },
+      { id: 'd18', text: 'Yellow fever vaccination card', note: 'Required for travel' },
+    ]
+  },
+  {
+    id: 'clothes_essentials',
+    emoji: '🧥',
+    title: 'Winter Clothes — Essentials',
+    items: [
+      { id: 'c1', text: 'Heavy winter coat / padded coat', note: 'Buy in UK — better variety and will be on sale in January' },
+      { id: 'c2', text: 'Thermal underlayer tops (long sleeve)', note: 'Buy 3-4 — very important for Portsmouth winter' },
+      { id: 'c3', text: 'Thermal leggings / long underwear', note: 'Wear under jeans when it is very cold' },
+      { id: 'c4', text: 'Thick wool or thermal socks', note: '7 pairs minimum' },
+      { id: 'c5', text: 'Waterproof boots or shoes', note: 'Portsmouth is coastal — it rains constantly' },
+      { id: 'c6', text: 'Gloves', note: 'Buy in Nigeria — cheaper here' },
+      { id: 'c7', text: 'Scarf', note: 'Buy in Nigeria — cheaper here' },
+      { id: 'c8', text: 'Beanie hat / winter hat', note: 'Buy in Nigeria — cheaper here' },
+      { id: 'c9', text: 'Compact foldable umbrella', note: 'Buy in Nigeria — cheaper here' },
+    ]
+  },
+  {
+    id: 'clothes_general',
+    emoji: '👕',
+    title: 'Clothes — General',
+    items: [
+      { id: 'cg1', text: 'Hoodies and sweatshirts', note: '3-4 — you will live in these indoors' },
+      { id: 'cg2', text: 'Jeans', note: '3 pairs minimum' },
+      { id: 'cg3', text: 'Regular t-shirts', note: '5-7' },
+      { id: 'cg4', text: 'Formal shirts', note: '2 — for presentations and professional situations' },
+      { id: 'cg5', text: 'Formal trousers', note: '2 pairs' },
+      { id: 'cg6', text: 'Underwear', note: '10 pairs' },
+      { id: 'cg7', text: 'Regular socks', note: '7 pairs' },
+      { id: 'cg8', text: 'Pyjamas', note: '2 sets — cold bedroom nights' },
+      { id: 'cg9', text: 'Indoor slippers', note: '1 pair' },
+      { id: 'cg10', text: 'Trainers / sneakers', note: '1 comfortable pair for everyday walking' },
+      { id: 'cg11', text: 'Belt', note: '1-2' },
+    ]
+  },
+  {
+    id: 'food',
+    emoji: '🍛',
+    title: 'Food — Bring from Nigeria (Sealed and Packaged)',
+    items: [
+      { id: 'f1', text: 'Quaker Oats', note: 'Large packs — much cheaper here' },
+      { id: 'f2', text: 'Cornflakes or favourite cereal', note: '' },
+      { id: 'f3', text: 'Milo or Bournvita', note: 'Large tin or sealed pack' },
+      { id: 'f4', text: 'Indomie noodles', note: 'Pack of 40 — cheaper here than UK African shops' },
+      { id: 'f5', text: 'Semovita or wheat meal', note: '2 bags — hard to find in Portsmouth' },
+      { id: 'f6', text: 'Garri', note: '1 bag' },
+      { id: 'f7', text: 'Rice', note: 'Small amount — Nigerian parboiled is better' },
+      { id: 'f8', text: 'Beans', note: 'Small sealed bag' },
+      { id: 'f9', text: 'Peanut butter / groundnut paste', note: 'Sealed jar' },
+      { id: 'f10', text: 'Sugar', note: '1 bag' },
+      { id: 'f11', text: 'Tin tomatoes', note: '5-8 small tins' },
+      { id: 'f12', text: 'Sardines or tuna tins', note: '5-10 tins' },
+      { id: 'f13', text: 'Seasoning cubes (Maggi or Knorr)', note: 'Small pack — you will regret not having these' },
+      { id: 'f14', text: 'Crayfish', note: 'Small sealed pack — packs small and lasts long' },
+      { id: 'f15', text: 'Palm oil', note: 'Sealed plastic bottle — wrap properly for travel' },
+      { id: 'f16', text: 'Dried pepper', note: 'Sealed bag' },
+      { id: 'f17', text: 'Spaghetti or pasta', note: '3-4 packs' },
+      { id: 'f18', text: 'Tea bags', note: 'Lipton or your preferred brand' },
+      { id: 'f19', text: 'Chocolate or personal snacks', note: 'Small stash for homesick moments' },
+      { id: 'f20', text: 'Egusi', note: 'Small sealed pack' },
+    ]
+  },
+  {
+    id: 'electronics',
+    emoji: '💻',
+    title: 'Electronics and Tech',
+    items: [
+      { id: 'e1', text: 'Laptop', note: 'Your primary tool — goes in hand luggage' },
+      { id: 'e2', text: 'Laptop charger', note: 'Confirm it is dual voltage 100-240V' },
+      { id: 'e3', text: 'Phone and charger', note: '' },
+      { id: 'e4', text: 'Power bank (large capacity)', note: 'Essential for commuting' },
+      { id: 'e5', text: 'Earphones or headphones', note: '' },
+      { id: 'e6', text: 'USB cables and charging cables', note: 'All devices covered' },
+      { id: 'e7', text: 'External hard drive or large USB', note: 'For backing up school work' },
+      { id: 'e8', text: 'UK plug adapter', note: 'Nigeria uses same Type G plugs as UK — but verify your charger voltages' },
+      { id: 'e9', text: 'Electric shaver / grooming device', note: '' },
+      { id: 'e10', text: 'Hair clippers', note: 'Barber prices in the UK are expensive — bring your own clippers' },
+    ]
+  },
+  {
+    id: 'toiletries',
+    emoji: '🧴',
+    title: 'Toiletries — Buy in Nigeria (Cheaper Here)',
+    items: [
+      { id: 't1', text: 'Black soap or preferred soap', note: '5-6 bars — Nigerian brands work better for your skin' },
+      { id: 't2', text: 'Shea butter or body cream', note: '2-3 large jars — UK equivalent is expensive and different' },
+      { id: 't3', text: 'Toothbrush', note: '2-3' },
+      { id: 't4', text: 'Toothpaste', note: '2-3 tubes' },
+      { id: 't5', text: 'Deodorant', note: '3-4 sticks' },
+      { id: 't6', text: 'Vaseline / petroleum jelly', note: 'Large jar — skin gets very dry in UK cold' },
+      { id: 't7', text: 'Shampoo for your hair type', note: '' },
+      { id: 't8', text: 'Razor blades', note: '' },
+      { id: 't9', text: 'Nail clipper', note: '' },
+      { id: 't10', text: 'Panadol / paracetamol', note: 'Pack of 20+' },
+      { id: 't11', text: 'Vitamin C tablets', note: 'Immune system boost for cold weather' },
+      { id: 't12', text: 'Multivitamins', note: '' },
+      { id: 't13', text: 'Antimalarial tablets', note: 'Bring some from Nigeria just in case' },
+      { id: 't14', text: 'Cold and flu medicine', note: 'You will likely catch something in your first winter' },
+      { id: 't15', text: 'Plasters / band-aids', note: '' },
+      { id: 't16', text: 'Hand lotion', note: 'UK winter is brutal on hands' },
+    ]
+  },
+  {
+    id: 'miscellaneous',
+    emoji: '🎒',
+    title: 'Miscellaneous and Kitchen',
+    items: [
+      { id: 'm1', text: 'Good backpack for daily campus use', note: 'Comfortable enough for laptop and books' },
+      { id: 'm2', text: 'Padlock for luggage', note: '2 small padlocks' },
+      { id: 'm3', text: 'Notepad and pens', note: '' },
+      { id: 'm4', text: 'Laundry bag', note: '' },
+      { id: 'm5', text: 'Small sewing kit', note: 'Emergency button repairs etc' },
+      { id: 'm6', text: 'Measuring cup', note: 'Nigerian cup measurements differ from UK recipes' },
+      { id: 'm7', text: 'Small Nigerian cooking pot', note: 'If you can fit it in luggage' },
+      { id: 'm8', text: 'Photos of family', note: 'Physical printed photos — for your room, helps with homesickness' },
+      { id: 'm9', text: 'Small Nigerian flag or item from home', note: 'Optional but meaningful for your room' },
+    ]
+  },
+  {
+    id: 'luggage_strategy',
+    emoji: '🧳',
+    title: 'Luggage Packing Strategy',
+    items: [
+      { id: 'ls1', text: 'BAG 1 (25kg checked): Clothes, shoes, winter accessories, toiletries, electronics (except laptop)', note: '' },
+      { id: 'ls2', text: 'BAG 2 (25kg checked): Food items, kitchen essentials, miscellaneous', note: '' },
+      { id: 'ls3', text: 'BACKPACK (hand luggage): Laptop, ALL original documents, passport, valuables, one change of clothes', note: 'In case luggage is delayed — always keep documents on you' },
+      { id: 'ls4', text: 'Weigh both bags before leaving for airport', note: 'Each must be 25kg or under — overweight fees are expensive' },
+      { id: 'ls5', text: 'Photograph contents of both bags before closing them', note: 'Insurance and customs purposes' },
+    ]
+  },
+  {
+    id: 'pre_departure',
+    emoji: '✅',
+    title: 'Pre-Departure Actions (Complete Before You Leave)',
+    items: [
+      { id: 'pd1', text: 'Inform GTBank you are travelling internationally', note: 'So card is not blocked abroad' },
+      { id: 'pd2', text: 'Download offline Google Maps of Portsmouth', note: 'In case you land without data' },
+      { id: 'pd3', text: 'Save Collegiate Crown Place address and phone number offline', note: '' },
+      { id: 'pd4', text: 'Save Portsmouth University contact number offline', note: '' },
+      { id: 'pd5', text: 'Research and save nearest African/Nigerian food shop in Portsmouth', note: 'So you can find Nigerian food when your supply runs out' },
+      { id: 'pd6', text: 'Research SIM card options in UK', note: 'Giffgaff or Smarty are popular for students — affordable data plans' },
+      { id: 'pd7', text: 'Set up NHS registration plan', note: 'You paid IHS — register with a local GP surgery soon after arrival' },
+      { id: 'pd8', text: 'Confirm flight booking and check-in online 24 hours before', note: '' },
+      { id: 'pd9', text: 'Notify accommodation of your estimated arrival time', note: '' },
+      { id: 'pd10', text: 'Exchange some Naira to GBP cash before travelling', note: 'Have at least £100-£200 cash for immediate needs on arrival' },
+    ]
+  }
+];
+
+// --- State ---
+let state = { checks: {}, customItems: {} };
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) state = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  showSaved();
+}
+
+let savedTimeout;
+function showSaved() {
+  const badge = document.getElementById('savedBadge');
+  badge.classList.add('show');
+  clearTimeout(savedTimeout);
+  savedTimeout = setTimeout(() => badge.classList.remove('show'), 2000);
+}
+
+function updateProgress() {
+  let total = 0, done = 0;
+  document.querySelectorAll('.item input[type="checkbox"]').forEach(cb => {
+    total++;
+    if (cb.checked) done++;
+  });
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').innerHTML = `<span>${done} of ${total}</span> items packed (${pct}%)`;
+
+  // Update section counts
+  defaultSections.forEach(section => {
+    const sectionEl = document.getElementById('section-' + section.id);
+    if (!sectionEl) return;
+    const cbs = sectionEl.querySelectorAll('input[type="checkbox"]');
+    const sectionDone = [...cbs].filter(c => c.checked).length;
+    const countEl = sectionEl.querySelector('.section-count');
+    if (countEl) {
+      countEl.textContent = `${sectionDone}/${cbs.length}`;
+      countEl.className = 'section-count' + (sectionDone === cbs.length && cbs.length > 0 ? ' done' : '');
+    }
+  });
+}
+
+function buildSections() {
+  const container = document.getElementById('sectionsContainer');
+  container.innerHTML = '';
+
+  defaultSections.forEach(section => {
+    const customKey = 'custom_' + section.id;
+    const customItems = state.customItems[customKey] || [];
+    const allItems = [...section.items, ...customItems];
+
+    const el = document.createElement('div');
+    el.className = 'section';
+    el.id = 'section-' + section.id;
+
+    const totalItems = allItems.length;
+    const doneItems = allItems.filter(item => state.checks[item.id]).length;
+
+    el.innerHTML = `
+      <div class="section-header" onclick="toggleSection('${section.id}')">
+        <div class="section-title">
+          <span class="section-emoji">${section.emoji}</span>
+          ${section.title}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="section-count ${doneItems === totalItems && totalItems > 0 ? 'done' : ''}">${doneItems}/${totalItems}</span>
+          <span class="chevron">▾</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <div id="items-${section.id}"></div>
+        <div class="add-row">
+          <input class="add-input" id="add-input-${section.id}" placeholder="Add item to this section..." onkeydown="if(event.key==='Enter')addItem('${section.id}')">
+          <button class="add-btn" onclick="addItem('${section.id}')">+ Add</button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(el);
+
+    const itemsContainer = document.getElementById('items-' + section.id);
+    allItems.forEach(item => renderItem(itemsContainer, item, section.id));
+  });
+
+  updateProgress();
+}
+
+function renderItem(container, item, sectionId) {
+  const isCustom = item.id.startsWith('custom_');
+  const checked = !!state.checks[item.id];
+
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.id = 'item-' + item.id;
+  div.innerHTML = `
+    <input type="checkbox" id="cb-${item.id}" ${checked ? 'checked' : ''} onchange="toggleCheck('${item.id}')">
+    <label class="item-label ${checked ? 'checked' : ''}" for="cb-${item.id}">
+      ${item.text}
+      ${item.note ? `<span class="item-note">${item.note}</span>` : ''}
+    </label>
+    ${isCustom ? `<button class="item-delete" onclick="deleteCustomItem('${sectionId}','${item.id}')" title="Remove">✕</button>` : ''}
+  `;
+  container.appendChild(div);
+}
+
+function toggleCheck(itemId) {
+  state.checks[itemId] = !state.checks[itemId];
+  const label = document.querySelector(`label[for="cb-${itemId}"]`);
+  if (label) label.className = 'item-label' + (state.checks[itemId] ? ' checked' : '');
+  saveState();
+  updateProgress();
+}
+
+function toggleSection(sectionId) {
+  const el = document.getElementById('section-' + sectionId);
+  el.classList.toggle('collapsed');
+}
+
+function addItem(sectionId) {
+  const input = document.getElementById('add-input-' + sectionId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const customKey = 'custom_' + sectionId;
+  if (!state.customItems[customKey]) state.customItems[customKey] = [];
+
+  const newItem = {
+    id: 'custom_' + Date.now(),
+    text: text,
+    note: ''
+  };
+
+  state.customItems[customKey].push(newItem);
+  input.value = '';
+
+  const itemsContainer = document.getElementById('items-' + sectionId);
+  renderItem(itemsContainer, newItem, sectionId);
+
+  saveState();
+  updateProgress();
+}
+
+function deleteCustomItem(sectionId, itemId) {
+  const customKey = 'custom_' + sectionId;
+  if (!state.customItems[customKey]) return;
+  state.customItems[customKey] = state.customItems[customKey].filter(i => i.id !== itemId);
+  delete state.checks[itemId];
+
+  const el = document.getElementById('item-' + itemId);
+  if (el) el.remove();
+
+  saveState();
+  updateProgress();
+}
+
+function expandAll() {
+  document.querySelectorAll('.section.collapsed').forEach(s => s.classList.remove('collapsed'));
+}
+
+function collapseAll() {
+  document.querySelectorAll('.section:not(.collapsed)').forEach(s => s.classList.add('collapsed'));
+}
+
+function uncheckAll() {
+  if (!confirm('Reset all ticked items? Your added items will stay.')) return;
+  state.checks = {};
+  document.querySelectorAll('.item input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+  document.querySelectorAll('.item-label').forEach(l => l.classList.remove('checked'));
+  saveState();
+  updateProgress();
+}
+
+function clearCustomItems() {
+  if (!confirm('Remove all your custom added items?')) return;
+  state.customItems = {};
+  buildSections();
+  saveState();
+}
+
+// Init
+loadState();
+buildSections();
+</script>
+</body>
+</html>
